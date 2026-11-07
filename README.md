@@ -46,9 +46,9 @@ the migration record table once without reapplying the SQL:
 npm run db:migrate:turso -- --baseline
 ```
 
-This baseline option verifies the current product tables and columns before
-recording the existing migrations. Do not use it on a new or partially migrated
-database.
+This baseline option verifies all tables and columns in the current Prisma
+schema before recording the existing migrations. Do not use it on a new or
+partially migrated database.
 
 Dependency installation runs `prisma generate`, so the deployed Prisma Client
 is generated from the checked-in schema.
