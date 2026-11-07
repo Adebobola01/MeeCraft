@@ -51,7 +51,9 @@ export default async function ProductsPage({
   const selectedCategory = firstValue(params.category);
   const category = isProductCategory(selectedCategory) ? selectedCategory : "";
   const requestedType = firstValue(params.type);
-  const productType = isProductType(category, requestedType) ? requestedType : "";
+  const productType = isProductType(category, requestedType)
+    ? requestedType
+    : "";
   const requestedSort = firstValue(params.sort);
   const sort = ["price-low", "price-high"].includes(requestedSort)
     ? requestedSort
@@ -93,7 +95,7 @@ export default async function ProductsPage({
         </nav>
         <div className="shop-catalog-heading">
           <div>
-            <p className="shop-kicker">MECRAFT COLLECTION</p>
+            <p className="shop-kicker">MEECRAFTS COLLECTION</p>
             <h1>{productType || category || "Shoes & bags"}</h1>
           </div>
           <p>
@@ -167,7 +169,8 @@ export default async function ProductsPage({
         </form>
         <div className="shop-results">
           <span>
-            {result.total} {result.total === 1 ? "product" : "products"} to discover
+            {result.total} {result.total === 1 ? "product" : "products"} to
+            discover
           </span>
           {(search || category || productType) && (
             <Link href="/products" className="shop-clear-filters">
@@ -187,7 +190,7 @@ export default async function ProductsPage({
           </div>
         ) : (
           <div className="shop-catalog-empty">
-            <span className="shop-kicker">MECRAFT COLLECTION</span>
+            <span className="shop-kicker">MEECRAFTS COLLECTION</span>
             <h2>
               {search || category || productType
                 ? "No products found"

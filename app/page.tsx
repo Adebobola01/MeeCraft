@@ -1,7 +1,12 @@
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, Footprints, ShoppingBag } from "lucide-react";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Footprints,
+  ShoppingBag,
+} from "lucide-react";
 import { ProductTile } from "@/components/storefront/product-tile";
-import { FadeIn, Reveal } from "@/components/storefront/reveal";
+import { Reveal } from "@/components/storefront/reveal";
 import { StoreHeader } from "@/components/storefront/store-header";
 import {
   getBestSellerProducts,
@@ -42,11 +47,11 @@ export default async function Home() {
               <ShoppingBag />
               <span>Bags</span>
             </div>
-            <span className="shop-hero-art-note">MeeCraft collection</span>
+            <span className="shop-hero-art-note">MeeCrafts collection</span>
           </div>
           <div className="shop-hero-shade" />
-          <FadeIn className="shop-hero-copy">
-            <p className="shop-kicker">MEET MECRAFT</p>
+          <div className="shop-hero-copy">
+            <p className="shop-kicker">MEET MEECRAFTS</p>
             <h1>
               Made for
               <br />
@@ -59,7 +64,7 @@ export default async function Home() {
             <Link href="/products" className="shop-button shop-button-light">
               Explore the collection <ArrowRight aria-hidden="true" />
             </Link>
-          </FadeIn>
+          </div>
           <span className="shop-hero-caption">
             PRODUCT PHOTOGRAPHY COMING SOON
           </span>
@@ -76,27 +81,26 @@ export default async function Home() {
             </Link>
           </div>
           <div className="shop-category-scrollable shop-category-scrollable-two">
-            {categories.map((category, index) => {
+            {categories.map((category) => {
               const Icon = category.icon;
               return (
-                <Reveal key={category.name} delay={index * 0.04}>
-                  <Link
-                    className="shop-category-card"
-                    href={`/products?category=${encodeURIComponent(category.name)}`}
-                  >
-                    <span className="shop-category-image shop-placeholder-art">
-                      <Icon aria-hidden="true" />
-                      <span>Product photos coming soon</span>
-                      <span className="shop-category-arrow">
-                        <ArrowUpRight aria-hidden="true" />
-                      </span>
+                <Link
+                  className="shop-category-card"
+                  href={`/products?category=${encodeURIComponent(category.name)}`}
+                  key={category.name}
+                >
+                  <span className="shop-category-image shop-placeholder-art">
+                    <Icon aria-hidden="true" />
+                    <span>Product photos coming soon</span>
+                    <span className="shop-category-arrow">
+                      <ArrowUpRight aria-hidden="true" />
                     </span>
-                    <span className="shop-category-name">{category.name}</span>
-                    <span className="shop-category-subtitle">
-                      {category.description}
-                    </span>
-                  </Link>
-                </Reveal>
+                  </span>
+                  <span className="shop-category-name">{category.name}</span>
+                  <span className="shop-category-subtitle">
+                    {category.description}
+                  </span>
+                </Link>
               );
             })}
           </div>
@@ -106,7 +110,7 @@ export default async function Home() {
           <div className="shop-content">
             <div className="shop-section-heading">
               <div>
-                <p className="shop-kicker">FRESH FROM MECRAFT</p>
+                <p className="shop-kicker">FRESH FROM MEECRAFTS</p>
                 <h2>Just added</h2>
               </div>
               <Link className="shop-text-link" href="/products?sort=newest">
@@ -127,7 +131,7 @@ export default async function Home() {
                   M
                 </span>
                 <div>
-                  <h3>The first MeeCraft pieces are on their way.</h3>
+                  <h3>The first MeeCrafts pieces are on their way.</h3>
                   <p>
                     Check back soon, or browse shoes and bags to see what is
                     coming.
@@ -145,7 +149,7 @@ export default async function Home() {
           <div className="shop-content">
             <div className="shop-section-heading">
               <div>
-                <p className="shop-kicker">THE MECRAFT EDIT</p>
+                <p className="shop-kicker">THE MEECRAFTS EDIT</p>
                 <h2>Popular picks</h2>
               </div>
               <Link className="shop-text-link" href="/products">
@@ -184,7 +188,7 @@ export default async function Home() {
           <div className="shop-story-image shop-story-placeholder">
             <Footprints aria-hidden="true" />
             <ShoppingBag aria-hidden="true" />
-            <span>More about MeeCraft</span>
+            <span>More about MeeCrafts</span>
           </div>
           <div className="shop-story-copy">
             <p className="shop-kicker">A NEW WAY TO SHOP</p>

@@ -1,5 +1,10 @@
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, Footprints, ShoppingBag } from "lucide-react";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Footprints,
+  ShoppingBag,
+} from "lucide-react";
 import { StoreHeader } from "@/components/storefront/store-header";
 import Footer from "@/components/Footer";
 
@@ -27,11 +32,11 @@ export default function GiftsPage() {
           <span>Gift guide</span>
         </nav>
         <section className="shop-gifts-intro">
-          <p className="shop-kicker">THE MECRAFT GIFT GUIDE</p>
+          <p className="shop-kicker">THE MEECRAFTS GIFT GUIDE</p>
           <h1>Find something that feels like them.</h1>
           <p>
-            Explore shoes and bags for birthdays, celebrations, and the
-            everyday moments worth marking.
+            Explore shoes and bags for birthdays, celebrations, and the everyday
+            moments worth marking.
           </p>
           <Link href="/products" className="shop-button shop-button-dark">
             Browse all products <ArrowRight aria-hidden="true" />
