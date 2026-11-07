@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAdminProductForEdit } from "@/data/admin-products";
 import { UpdateProductForm } from "./update-product-form";
-import { normalizeProductCategory } from "@/lib/product-catalog";
+import { isProductCategory } from "@/lib/product-catalog";
+import { formatProductVariantsForAdmin } from "@/lib/product-variants";
 
 export default async function EditProductPage({
   params,
@@ -11,6 +12,9 @@ export default async function EditProductPage({
   const product = await getAdminProductForEdit(id);
 
   if (!product) {
+    notFound();
+  }
+  if (!isProductCategory(product.category)) {
     notFound();
   }
 
@@ -39,9 +43,9 @@ export default async function EditProductPage({
         <UpdateProductForm
           product={{
             ...product,
-            category: normalizeProductCategory(product.category),
+            category: product.category,
+            variantsInput: formatProductVariantsForAdmin(product.variantsJson),
             price: (product.priceInMinorUnits / 100).toFixed(2),
-            quantity: String(product.quantity),
           }}
         />
       </div>

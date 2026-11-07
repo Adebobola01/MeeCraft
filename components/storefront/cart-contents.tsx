@@ -5,11 +5,22 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ArrowRight, Minus, Plus, Trash2 } from "lucide-react";
 import { useCart, type CartLine } from "@/components/storefront/cart-provider";
+import {
+  getAvailableVariantQuantity,
+  getProductVariant,
+  getProductVariantLabel,
+  parseStoredProductVariants,
+} from "@/lib/product-variants";
 
 type CartProduct = {
   id: string;
   slug: string;
   name: string;
+  category: string;
+  productType: string;
+  fulfillmentMode: string;
+  productionLeadTimeDays: number | null;
+  variantsJson: string;
   priceInMinorUnits: number;
   currencyCode: string;
   quantity: number;
@@ -17,7 +28,7 @@ type CartProduct = {
 };
 
 function formatPrice(priceInMinorUnits: number, currencyCode: string) {
-  return new Intl.NumberFormat("en", {
+  return new Intl.NumberFormat(currencyCode === "NGN" ? "en-NG" : "en", {
     style: "currency",
     currency: currencyCode,
     maximumFractionDigits: 2,
@@ -30,7 +41,9 @@ function linesChanged(current: CartLine[], next: CartLine[]) {
     current.some(
       (line, index) =>
         line.productId !== next[index]?.productId ||
-        line.quantity !== next[index]?.quantity,
+          line.variantKey !== next[index]?.variantKey ||
+          line.customRequest !== next[index]?.customRequest ||
+          line.quantity !== next[index]?.quantity,
     )
   );
 }
@@ -88,13 +101,23 @@ export function CartContents() {
         let reducedQuantities = false;
         const nextItems = items.flatMap((item) => {
           const product = productsById.get(item.productId);
-          if (!product || product.quantity < 1) {
+          if (!product) {
             removedUnavailable = true;
             return [];
           }
-          if (item.quantity > product.quantity) {
+          const variants = parseStoredProductVariants(product.variantsJson);
+          const variant = getProductVariant(variants, item.variantKey);
+          const availableQuantity = getAvailableVariantQuantity(
+            variant,
+            product.fulfillmentMode,
+          );
+          if (availableQuantity < 1) {
+            removedUnavailable = true;
+            return [];
+          }
+          if (item.quantity > availableQuantity) {
             reducedQuantities = true;
-            return [{ ...item, quantity: product.quantity }];
+            return [{ ...item, quantity: availableQuantity }];
           }
           return [item];
         });
@@ -202,17 +225,27 @@ export function CartContents() {
           <h2>Your bag is waiting for something lovely.</h2>
           <p>Explore the collection and add a piece you love.</p>
           <Link href="/products" className="shop-button shop-button-dark">
-            Shop jewelry <ArrowRight aria-hidden="true" />
+            Shop shoes and bags <ArrowRight aria-hidden="true" />
           </Link>
         </div>
       ) : (
         <div className="shop-cart-layout">
           <div className="shop-cart-items">
-            {visibleItems.map(({ product, quantity }) => {
+            {visibleItems.map(
+              ({ product, variantKey, customRequest, quantity }) => {
               const image = product.images[0];
+              const variants = parseStoredProductVariants(product.variantsJson);
+              const variant = getProductVariant(variants, variantKey);
+              const availableQuantity = getAvailableVariantQuantity(
+                variant,
+                product.fulfillmentMode,
+              );
 
               return (
-                <article className="shop-cart-item" key={product.id}>
+                <article
+                  className="shop-cart-item"
+                  key={`${product.id}-${variantKey}`}
+                >
                   <Link
                     className="shop-cart-product-image"
                     href={`/products/${product.slug}`}
@@ -242,6 +275,24 @@ export function CartContents() {
                         product.currencyCode,
                       )}
                     </span>
+                    {variant && (
+                      <span className="shop-cart-option">
+                        {getProductVariantLabel(variant)}
+                      </span>
+                    )}
+                    {product.fulfillmentMode === "MADE_TO_ORDER" && (
+                      <span className="shop-cart-option">
+                        Made to order
+                        {product.productionLeadTimeDays
+                          ? ` · ${product.productionLeadTimeDays} days`
+                          : ""}
+                      </span>
+                    )}
+                    {customRequest && (
+                      <span className="shop-cart-option">
+                        Request: {customRequest}
+                      </span>
+                    )}
                     <div className="shop-cart-item-actions">
                       <div
                         className="shop-cart-quantity"
@@ -252,7 +303,7 @@ export function CartContents() {
                           aria-label={`Decrease ${product.name} quantity`}
                           disabled={quantity <= 1 || accountSyncing}
                           onClick={() =>
-                            setQuantity(product.id, quantity - 1)
+                            setQuantity(product.id, variantKey, quantity - 1)
                           }
                         >
                           <Minus aria-hidden="true" />
@@ -262,10 +313,10 @@ export function CartContents() {
                           type="button"
                           aria-label={`Increase ${product.name} quantity`}
                           disabled={
-                            quantity >= product.quantity || accountSyncing
+                            quantity >= availableQuantity || accountSyncing
                           }
                           onClick={() =>
-                            setQuantity(product.id, quantity + 1)
+                            setQuantity(product.id, variantKey, quantity + 1)
                           }
                         >
                           <Plus aria-hidden="true" />
@@ -275,7 +326,7 @@ export function CartContents() {
                         type="button"
                         className="shop-cart-remove"
                         disabled={accountSyncing}
-                        onClick={() => removeItem(product.id)}
+                        onClick={() => removeItem(product.id, variantKey)}
                       >
                         <Trash2 aria-hidden="true" /> Remove
                       </button>
@@ -289,7 +340,8 @@ export function CartContents() {
                   </span>
                 </article>
               );
-            })}
+              },
+            )}
           </div>
 
           <aside className="shop-cart-summary">

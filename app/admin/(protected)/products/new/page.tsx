@@ -21,7 +21,7 @@ export default function NewProductPage() {
           </h1>
           <p className="mt-2 text-sm text-neutral-600">
             Add the details, set a price, and choose whether to save a draft or
-            publish your jewelry.
+            publish your shoes and bags.
           </p>
         </div>
 

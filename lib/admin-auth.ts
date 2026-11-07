@@ -3,7 +3,7 @@ import "server-only";
 import { createHmac, scrypt, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 
-const SESSION_COOKIE = "aurvella-admin-session";
+const SESSION_COOKIE = "meecraft-admin-session";
 const SESSION_DURATION_SECONDS = 60 * 60 * 8;
 const PASSWORD_HASH_PATTERN = /^scrypt:([a-f0-9]{32}):([a-f0-9]{128})$/i;
 

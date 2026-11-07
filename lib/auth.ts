@@ -28,7 +28,7 @@ const socialProviders =
 export const googleSignInEnabled = socialProviders !== undefined;
 
 export const auth = betterAuth({
-  appName: "Aurvella",
+  appName: "MeeCraft",
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
   secret: process.env.BETTER_AUTH_SECRET,
   database: prismaAdapter(db, { provider: "sqlite" }),
@@ -40,9 +40,9 @@ export const auth = betterAuth({
     sendResetPassword: async ({ user, url }) => {
       await sendAuthEmail({
         to: user.email,
-        subject: "Reset your Aurvella password",
+        subject: "Reset your MeeCraft password",
         heading: "Choose a new password",
-        message: "Use the secure link below to reset your Aurvella password.",
+        message: "Use the secure link below to reset your MeeCraft password.",
         actionLabel: "Reset password",
         actionUrl: url,
       });
@@ -55,8 +55,8 @@ export const auth = betterAuth({
     sendVerificationEmail: async ({ user, url }) => {
       await sendAuthEmail({
         to: user.email,
-        subject: "Verify your Aurvella email",
-        heading: `Welcome to Aurvella, ${user.name}`,
+        subject: "Verify your MeeCraft email",
+        heading: `Welcome to MeeCraft, ${user.name}`,
         message: "Confirm your email address to finish creating your account.",
         actionLabel: "Verify email",
         actionUrl: url,

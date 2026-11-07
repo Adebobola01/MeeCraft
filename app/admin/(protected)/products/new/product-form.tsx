@@ -5,13 +5,21 @@ import {
   createProduct,
   type CreateProductState,
 } from "../actions";
-import { PRODUCT_CATEGORIES } from "@/lib/product-catalog";
+import {
+  PRODUCT_CATEGORIES,
+  PRODUCT_TYPES_BY_CATEGORY,
+  isProductCategory,
+  type ProductCategory,
+} from "@/lib/product-catalog";
 
 const initialState: CreateProductState = {
-  currencyCode: "USD",
+  currencyCode: "NGN",
   status: "DRAFT",
   imageTickets: "[]",
-  quantity: "0",
+  category: "Shoes",
+  productType: "Sandals",
+  fulfillmentMode: "READY_TO_SHIP",
+  variantsInput: "",
 };
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
@@ -58,6 +66,9 @@ export function CreateProductForm() {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState("");
   const [uploadError, setUploadError] = useState("");
+  const [category, setCategory] = useState<ProductCategory>("Shoes");
+  const [productType, setProductType] = useState("Sandals");
+  const [fulfillmentMode, setFulfillmentMode] = useState("READY_TO_SHIP");
   const formRef = useRef<HTMLFormElement>(null);
   const continueSubmitRef = useRef(false);
   const imagesRef = useRef(images);
@@ -244,7 +255,7 @@ export function CreateProductForm() {
               maxLength={100}
               minLength={2}
               name="name"
-              placeholder="e.g. Sculpted Gold Signet Ring"
+              placeholder="e.g. Everyday Leather Sandals"
               required
             />
           </div>
@@ -255,17 +266,40 @@ export function CreateProductForm() {
             </label>
             <select
               className="h-11 w-full border border-neutral-300 bg-white px-3 text-sm outline-none focus:border-black focus:ring-1 focus:ring-black"
-              defaultValue={state.category ?? ""}
+              value={category}
               id="category"
               name="category"
               required
+              onChange={(event) => {
+                const nextCategory = event.currentTarget.value;
+                if (!isProductCategory(nextCategory)) return;
+                setCategory(nextCategory);
+                setProductType(PRODUCT_TYPES_BY_CATEGORY[nextCategory][0]);
+              }}
             >
-              <option disabled value="">
-                Select a category
-              </option>
               {PRODUCT_CATEGORIES.map((category) => (
                 <option key={category} value={category}>
                   {category}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium" htmlFor="productType">
+              Product style
+            </label>
+            <select
+              className="h-11 w-full border border-neutral-300 bg-white px-3 text-sm outline-none focus:border-black focus:ring-1 focus:ring-black"
+              value={productType}
+              id="productType"
+              name="productType"
+              required
+              onChange={(event) => setProductType(event.currentTarget.value)}
+            >
+              {PRODUCT_TYPES_BY_CATEGORY[category].map((type) => (
+                <option key={type} value={type}>
+                  {type}
                 </option>
               ))}
             </select>
@@ -299,7 +333,7 @@ export function CreateProductForm() {
               id="description"
               maxLength={3000}
               name="description"
-              placeholder="Describe the materials, craftsmanship, and details of this piece."
+              placeholder="Describe the materials, details, and fit of this product."
               rows={5}
             />
             <p className="mt-1.5 text-xs text-neutral-500">
@@ -310,25 +344,80 @@ export function CreateProductForm() {
       </section>
 
       <section className="border border-neutral-200 bg-white p-5 sm:p-7">
-        <h2 className="text-base font-medium">Inventory</h2>
+        <h2 className="text-base font-medium">Availability and options</h2>
         <p className="mt-1 text-sm text-neutral-500">
-          Set the number of pieces currently available.
+          Add one option combination per line. Use EU sizes for shoes and
+          customer-selectable details for bags.
         </p>
-        <div className="mt-5 max-w-xs">
-          <label className="mb-2 block text-sm font-medium" htmlFor="quantity">
-            Quantity in stock
-          </label>
-          <input
-            className="h-11 w-full border border-neutral-300 px-3 text-sm outline-none focus:border-black focus:ring-1 focus:ring-black"
-            defaultValue={state.quantity ?? "0"}
-            id="quantity"
-            max="1000000"
-            min="0"
-            name="quantity"
-            required
-            step="1"
-            type="number"
-          />
+        <div className="mt-5 grid gap-5 sm:grid-cols-2">
+          <div>
+            <label
+              className="mb-2 block text-sm font-medium"
+              htmlFor="fulfillmentMode"
+            >
+              Fulfillment
+            </label>
+            <select
+              className="h-11 w-full border border-neutral-300 bg-white px-3 text-sm outline-none focus:border-black focus:ring-1 focus:ring-black"
+              defaultValue={state.fulfillmentMode ?? "READY_TO_SHIP"}
+              id="fulfillmentMode"
+              name="fulfillmentMode"
+              onChange={(event) =>
+                setFulfillmentMode(event.currentTarget.value)
+              }
+            >
+              <option value="READY_TO_SHIP">Ready to ship</option>
+              <option value="MADE_TO_ORDER">Made to order</option>
+            </select>
+          </div>
+          {fulfillmentMode === "MADE_TO_ORDER" && (
+            <div>
+              <label
+                className="mb-2 block text-sm font-medium"
+                htmlFor="productionLeadTimeDays"
+              >
+                Production lead time (days)
+              </label>
+              <input
+                className="h-11 w-full border border-neutral-300 px-3 text-sm outline-none focus:border-black focus:ring-1 focus:ring-black"
+                defaultValue={state.productionLeadTimeDays ?? ""}
+                id="productionLeadTimeDays"
+                max="365"
+                min="1"
+                name="productionLeadTimeDays"
+                required
+                type="number"
+              />
+            </div>
+          )}
+          <div className="sm:col-span-2">
+            <label
+              className="mb-2 block text-sm font-medium"
+              htmlFor="variantsInput"
+            >
+              Sizes and option combinations
+            </label>
+            <textarea
+              className="min-h-32 w-full resize-y border border-neutral-300 px-3 py-2.5 font-mono text-sm leading-6 outline-none focus:border-black focus:ring-1 focus:ring-black"
+              defaultValue={state.variantsInput}
+              id="variantsInput"
+              maxLength={20000}
+              name="variantsInput"
+              placeholder={
+                category === "Shoes"
+                  ? "EU size=38 | 2\nEU size=39 | 1"
+                  : "Color=Black; Material=Canvas; Dimensions=Medium; Strap=Long | 2"
+              }
+              rows={5}
+            />
+            <p className="mt-1.5 text-xs leading-5 text-neutral-500">
+              Ready to ship: end each line with stock, such as{" "}
+              <code>EU size=38 | 2</code>. Made to order: end with{" "}
+              <code>*</code>, such as <code>EU size=38 | *</code>. Separate
+              multiple options with semicolons. Each line is a selectable
+              combination.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -367,8 +456,9 @@ export function CreateProductForm() {
               className="h-11 w-full border border-neutral-300 bg-white px-3 text-sm outline-none focus:border-black focus:ring-1 focus:ring-black"
               id="currencyCode"
               name="currencyCode"
-              defaultValue={state.currencyCode ?? "USD"}
+              defaultValue={state.currencyCode ?? "NGN"}
             >
+              <option value="NGN">NGN — Nigerian Naira</option>
               <option value="USD">USD — US Dollar</option>
               <option value="GBP">GBP — British Pound</option>
               <option value="EUR">EUR — Euro</option>

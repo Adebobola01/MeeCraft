@@ -1,3 +1,5 @@
+import { PRODUCT_CATEGORIES } from "@/lib/product-catalog";
+
 const MAX_CART_LINES = 50;
 
 export async function GET(request: Request) {
@@ -13,12 +15,20 @@ export async function GET(request: Request) {
 
   const { db } = await import("@/lib/db");
   const products = await db.product.findMany({
-    where: { id: { in: ids }, status: "PUBLISHED" },
+    where: {
+      id: { in: ids },
+      status: "PUBLISHED",
+      category: { in: [...PRODUCT_CATEGORIES] },
+    },
     select: {
       id: true,
       slug: true,
       name: true,
       category: true,
+      productType: true,
+      fulfillmentMode: true,
+      productionLeadTimeDays: true,
+      variantsJson: true,
       priceInMinorUnits: true,
       currencyCode: true,
       quantity: true,

@@ -12,12 +12,14 @@ import {
 } from "react";
 import { authClient } from "@/lib/auth-client";
 
-const CART_STORAGE_KEY = "aurvella-cart-v1";
+const CART_STORAGE_KEY = "meecraft-cart-v1";
 const MAX_CART_QUANTITY = 999;
 const MAX_CART_LINES = 50;
 
 export type CartLine = {
   productId: string;
+  variantKey: string;
+  customRequest: string;
   quantity: number;
 };
 
@@ -39,12 +41,18 @@ type CartContextValue = {
   customer: { id: string; name: string; email: string } | null;
   addItem: (
     productId: string,
+    variantKey: string,
+    customRequest: string,
     availableQuantity: number,
     quantity?: number,
   ) => AddItemResult;
   setCartDrawerOpen: (open: boolean) => void;
-  setQuantity: (productId: string, quantity: number) => boolean;
-  removeItem: (productId: string) => boolean;
+  setQuantity: (
+    productId: string,
+    variantKey: string,
+    quantity: number,
+  ) => boolean;
+  removeItem: (productId: string, variantKey: string) => boolean;
   replaceItems: (items: CartLine[]) => boolean;
   retryAccountSync: () => void;
   signOut: () => Promise<void>;
@@ -59,9 +67,23 @@ function parseCart(value: string): CartLine[] {
     throw new Error("Saved cart must be a list.");
   }
 
-  const lines = new Map<string, number>();
+  const lines = new Map<string, CartLine>();
 
   for (const item of parsed) {
+    const variantKey =
+      typeof item === "object" &&
+      item !== null &&
+      "variantKey" in item &&
+      typeof item.variantKey === "string"
+        ? item.variantKey
+        : "{}";
+    const customRequest =
+      typeof item === "object" &&
+      item !== null &&
+      "customRequest" in item &&
+      typeof item.customRequest === "string"
+        ? item.customRequest
+        : "";
     if (
       typeof item !== "object" ||
       item === null ||
@@ -73,24 +95,27 @@ function parseCart(value: string): CartLine[] {
       typeof item.quantity !== "number" ||
       !Number.isSafeInteger(item.quantity) ||
       item.quantity < 1 ||
-      item.quantity > MAX_CART_QUANTITY
+      item.quantity > MAX_CART_QUANTITY ||
+      variantKey.length > 1000 ||
+      customRequest.length > 500
     ) {
       throw new Error("Saved cart contains an invalid item.");
     }
 
-    lines.set(
-      item.productId,
-      Math.min(
+    const lineId = `${item.productId}\u0000${variantKey}`;
+    const existing = lines.get(lineId);
+    lines.set(lineId, {
+      productId: item.productId,
+      variantKey,
+      customRequest,
+      quantity: Math.min(
         MAX_CART_QUANTITY,
-        (lines.get(item.productId) ?? 0) + item.quantity,
+        (existing?.quantity ?? 0) + item.quantity,
       ),
-    );
+    });
   }
 
-  return Array.from(lines, ([productId, quantity]) => ({
-    productId,
-    quantity,
-  }));
+  return Array.from(lines.values());
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
@@ -330,10 +355,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const addItem = useCallback(
     (
       productId: string,
+      variantKey: string,
+      customRequest: string,
       availableQuantity: number,
       quantity = 1,
     ): AddItemResult => {
       if (!hydrated) return "storage-error";
+      if (!variantKey || variantKey.length > 1000 || customRequest.length > 500) {
+        return "limit";
+      }
       if (availableQuantity < 1) return "unavailable";
       if (
         !Number.isSafeInteger(quantity) ||
@@ -343,7 +373,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
         return "limit";
       }
 
-      const existing = items.find((item) => item.productId === productId);
+      const existing = items.find(
+        (item) =>
+          item.productId === productId && item.variantKey === variantKey,
+      );
       if (!existing && items.length >= MAX_CART_LINES) return "cart-full";
       const currentQuantity = existing?.quantity ?? 0;
       if (currentQuantity + quantity > availableQuantity) return "limit";
@@ -351,11 +384,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const nextQuantity = currentQuantity + quantity;
       const nextItems = existing
         ? items.map((item) =>
-            item.productId === productId
-              ? { ...item, quantity: nextQuantity }
+            item.productId === productId && item.variantKey === variantKey
+              ? { ...item, customRequest, quantity: nextQuantity }
               : item,
           )
-        : [...items, { productId, quantity: nextQuantity }];
+        : [
+            ...items,
+            { productId, variantKey, customRequest, quantity: nextQuantity },
+          ];
 
       if (!persistItems(nextItems)) return "storage-error";
       setCartDrawerOpen(true);
@@ -365,7 +401,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   );
 
   const setQuantity = useCallback(
-    (productId: string, quantity: number) => {
+    (productId: string, variantKey: string, quantity: number) => {
       if (
         !Number.isSafeInteger(quantity) ||
         quantity < 1 ||
@@ -376,7 +412,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
       return persistItems(
         items.map((item) =>
-          item.productId === productId ? { ...item, quantity } : item,
+          item.productId === productId && item.variantKey === variantKey
+            ? { ...item, quantity }
+            : item,
         ),
       );
     },
@@ -384,8 +422,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
   );
 
   const removeItem = useCallback(
-    (productId: string) =>
-      persistItems(items.filter((item) => item.productId !== productId)),
+    (productId: string, variantKey: string) =>
+      persistItems(
+        items.filter(
+          (item) =>
+            item.productId !== productId || item.variantKey !== variantKey,
+        ),
+      ),
     [items, persistItems],
   );
 

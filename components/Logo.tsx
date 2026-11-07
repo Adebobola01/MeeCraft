@@ -5,7 +5,7 @@ const Logo = () => {
   return (
     <Image
       src="/images/logo.png"
-      alt="Aurvella Logo"
+      alt="Temporary Aurvella logo"
       width={100}
       height={100}
     />

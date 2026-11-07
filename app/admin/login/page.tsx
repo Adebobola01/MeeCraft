@@ -15,7 +15,7 @@ export default async function AdminLoginPage() {
           className="text-xs font-semibold uppercase tracking-[0.3em]"
           href="/"
         >
-          Aurvella
+          MeeCraft
         </Link>
         <p className="mt-12 text-xs font-medium uppercase tracking-[0.2em] text-neutral-500">
           Administration

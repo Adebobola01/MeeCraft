@@ -15,7 +15,7 @@ export default async function ResetPasswordPage({
     <main className="shop-auth-page">
       <section className="shop-auth-card">
         <Link href="/" className="shop-auth-wordmark">
-          Aurvella
+          MeeCraft
         </Link>
         <p className="shop-kicker">ACCOUNT HELP</p>
         <h1>Choose a new password</h1>

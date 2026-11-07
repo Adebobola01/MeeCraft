@@ -2,13 +2,21 @@ import "server-only";
 
 import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
-import { isProductCategory } from "@/lib/product-catalog";
+import {
+  isProductCategory,
+  isProductType,
+  PRODUCT_CATEGORIES,
+} from "@/lib/product-catalog";
 
 const productCardSelect = {
   id: true,
   slug: true,
   name: true,
   category: true,
+  productType: true,
+  fulfillmentMode: true,
+  productionLeadTimeDays: true,
+  variantsJson: true,
   priceInMinorUnits: true,
   currencyCode: true,
   quantity: true,
@@ -27,7 +35,10 @@ export const BEST_SELLER_PRODUCT_SLUGS: string[] = [];
 
 export async function getFeaturedProducts() {
   return db.product.findMany({
-    where: { status: "PUBLISHED" },
+    where: {
+      status: "PUBLISHED",
+      category: { in: [...PRODUCT_CATEGORIES] },
+    },
     orderBy: [{ createdAt: "desc" }, { id: "asc" }],
     take: 4,
     select: productCardSelect,
@@ -42,6 +53,7 @@ export async function getBestSellerProducts() {
   const products = await db.product.findMany({
     where: {
       status: "PUBLISHED",
+      category: { in: [...PRODUCT_CATEGORIES] },
       slug: { in: BEST_SELLER_PRODUCT_SLUGS },
     },
     select: productCardSelect,
@@ -57,18 +69,26 @@ export async function getBestSellerProducts() {
 export async function getStorefrontProducts({
   search,
   category,
+  productType,
   sort,
   page,
 }: {
   search: string;
   category: string;
+  productType: string;
   sort: string;
   page: number;
 }) {
-  const conditions: Prisma.ProductWhereInput[] = [{ status: "PUBLISHED" }];
+  const conditions: Prisma.ProductWhereInput[] = [
+    { status: "PUBLISHED" },
+    { category: { in: [...PRODUCT_CATEGORIES] } },
+  ];
 
   if (isProductCategory(category)) {
     conditions.push({ category });
+  }
+  if (isProductType(category, productType)) {
+    conditions.push({ productType });
   }
   if (search) {
     conditions.push({
@@ -76,6 +96,7 @@ export async function getStorefrontProducts({
         { name: { contains: search } },
         { description: { contains: search } },
         { category: { contains: search } },
+        { productType: { contains: search } },
       ],
     });
   }
@@ -110,13 +131,21 @@ export async function getStorefrontProducts({
 
 export async function getStorefrontProduct(slug: string) {
   return db.product.findFirst({
-    where: { slug, status: "PUBLISHED" },
+    where: {
+      slug,
+      status: "PUBLISHED",
+      category: { in: [...PRODUCT_CATEGORIES] },
+    },
     select: {
       id: true,
       slug: true,
       name: true,
       description: true,
       category: true,
+      productType: true,
+      fulfillmentMode: true,
+      productionLeadTimeDays: true,
+      variantsJson: true,
       priceInMinorUnits: true,
       currencyCode: true,
       quantity: true,

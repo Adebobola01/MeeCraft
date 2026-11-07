@@ -17,11 +17,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Aurvella — Objects to keep",
-    template: "%s | Aurvella",
+    default: "MeeCraft — Handmade shoes and bags",
+    template: "%s | MeeCraft",
   },
   description:
-    "Jewelry with a point of view. Considered forms, beautiful materials, and the little details that make it yours.",
+    "Explore MeeCraft shoes and bags, with options to make each piece your own.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

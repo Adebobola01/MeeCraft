@@ -1,10 +1,16 @@
-# Aurvella
+# MeeCraft
 
-Aurvella is a jewelry marketplace built with Next.js App Router. The initial
-implementation includes protected administrator sign-in, a SQLite-backed
-product dashboard, and product creation/editing with inventory quantities,
-fixed product categories, and Cloudflare R2 image uploads. The public storefront
-is the next development step.
+MeeCraft is a shoes-and-bags storefront built with Next.js App Router. It
+includes protected administrator sign-in, a product dashboard, configurable
+product options, ready-to-ship stock by option, made-to-order lead times, a
+customer cart, and Cloudflare R2 image uploads. Product options are configured
+per listing so EU shoe sizes and bag colors, materials, dimensions, and straps
+can be entered as needed.
+
+This repository is a separate local copy of Aurvella. Keep Aurvella's deployed
+database, storage credentials, and authentication secrets separate. The local
+MeeCraft copy should use its SQLite database for development and a new,
+independent database if deployed.
 
 ## Database
 
@@ -14,9 +20,11 @@ database, because serverless function instances do not share a persistent local
 database file.
 
 1. Create a Turso database and an authentication token with the Turso CLI.
-2. Set `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` in the Vercel project's
-   environment variables for every environment you deploy. To run migrations
-   locally, set the same values in `.env.local`.
+2. Set `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` in the MeeCraft Vercel
+   project's environment variables for every environment you deploy. Use a
+   separate MeeCraft database; never configure this copy with Aurvella's live
+   database credentials. Local development uses SQLite when the Turso variables
+   are absent.
 3. Apply all pending migrations, in order, by running:
 
    ```bash
@@ -100,7 +108,7 @@ error rather than silently attempting to open a non-persistent SQLite file.
      {
        "AllowedOrigins": [
          "http://localhost:3000",
-         "https://aurvella.vercel.app"
+         "https://your-meecraft-domain"
        ],
        "AllowedMethods": ["PUT"],
        "AllowedHeaders": ["Content-Type"],
@@ -122,8 +130,13 @@ Usage beyond the included amounts is billed. R2 stores and serves the original
 image files; it does not provide Cloudflare Images' named image variants or
 transformations. See [R2 pricing](https://developers.cloudflare.com/r2/pricing/).
 
-Product categories are selected from the fixed list in the admin forms instead
-of entered as free text. Inventory quantity is a non-negative whole number.
+Product categories and styles are selected from fixed lists in the admin
+forms. In the option editor, enter one option combination per line in the form
+`EU size=38 | 2` for ready-to-ship stock, or
+`Color=Black; Material=Canvas | 2` for a bag combination. For made-to-order
+products, use `*` in place of the quantity and set a production lead time.
+Published products require at least one product image and one option
+combination. Product prices default to Nigerian naira (NGN).
 
 The admin session is stored in a signed, HttpOnly, SameSite=Strict cookie and
 expires after eight hours. Set environment variables in the deployment
@@ -148,7 +161,7 @@ Set these secrets in `.env.local` and in the production secret manager:
 - `RESEND_API_KEY` — the Resend API key used for verification and password reset
   messages.
 - `AUTH_EMAIL_FROM` — a sender address verified in Resend, for example
-  `Aurvella <accounts@your-verified-domain>`.
+  `MeeCraft <accounts@your-verified-domain>`.
 - `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` — optional until Google OAuth is
   configured. Create a Google OAuth Web application and register
   `https://your-domain/api/auth/callback/google` as an authorized redirect URI.
@@ -182,14 +195,15 @@ Then open [http://localhost:3000](http://localhost:3000).
 ## Shopping cart
 
 The guest cart is saved in the current browser and refreshed against published
-product data when the cart page opens. If inventory has changed, unavailable
-products are removed and quantities are reduced to available stock. The cart
-does not reserve inventory, and checkout is not implemented yet. Account-based
-cart syncing and merging will be added with customer sign-in.
+product and option data when the cart opens. If ready-to-ship inventory has
+changed, unavailable options are removed and quantities are reduced to current
+stock. Custom-request notes and selected options are kept with the cart line.
+The cart does not reserve inventory, and checkout is not implemented yet.
+Signed-in cart changes sync to the customer's account.
 
 ## Storefront merchandising
 
 The homepage Best Sellers edit is manually curated in
 `data/storefront-products.ts` through `BEST_SELLER_PRODUCT_SLUGS`. Add published
 product slugs to that list to feature them in the section. The Gifts guide is
-available at `/gifts` and links shoppers to the jewelry categories.
+available at `/gifts` and links shoppers to the shoes and bags collections.

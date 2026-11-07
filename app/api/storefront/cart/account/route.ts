@@ -1,16 +1,23 @@
 import type { Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { PRODUCT_CATEGORIES } from "@/lib/product-catalog";
+import { getProductVariant, parseStoredProductVariants } from "@/lib/product-variants";
 import { headers } from "next/headers";
 
 const MAX_CART_LINES = 50;
 const MAX_CART_QUANTITY = 999;
 
-type CartInput = { productId: string; quantity: number }[];
+type CartInput = {
+  productId: string;
+  variantKey: string;
+  customRequest: string;
+  quantity: number;
+}[];
 
 function parseItems(value: unknown): CartInput | null {
   if (!Array.isArray(value) || value.length > MAX_CART_LINES) return null;
-  const lines = new Map<string, number>();
+  const lines = new Map<string, CartInput[number]>();
 
   for (const item of value) {
     if (
@@ -29,19 +36,36 @@ function parseItems(value: unknown): CartInput | null {
       return null;
     }
 
-    lines.set(
-      item.productId,
-      Math.min(
+    const variantKey =
+      "variantKey" in item && typeof item.variantKey === "string"
+        ? item.variantKey
+        : "{}";
+    const customRequest =
+      "customRequest" in item && typeof item.customRequest === "string"
+        ? item.customRequest
+        : "";
+    if (
+      variantKey.length === 0 ||
+      variantKey.length > 1000 ||
+      customRequest.length > 500
+    ) {
+      return null;
+    }
+
+    const lineId = `${item.productId}\u0000${variantKey}`;
+    const existing = lines.get(lineId);
+    lines.set(lineId, {
+      productId: item.productId,
+      variantKey,
+      customRequest,
+      quantity: Math.min(
         MAX_CART_QUANTITY,
-        (lines.get(item.productId) ?? 0) + item.quantity,
+        (existing?.quantity ?? 0) + item.quantity,
       ),
-    );
+    });
   }
 
-  return Array.from(lines, ([productId, quantity]) => ({
-    productId,
-    quantity,
-  }));
+  return Array.from(lines.values());
 }
 
 async function readItems(request: Request) {
@@ -65,39 +89,68 @@ async function saveCart(
   const existingItems = mergeExisting
     ? await tx.customerCartItem.findMany({
         where: { userId },
-        select: { productId: true, quantity: true },
+        select: {
+          productId: true,
+          variantKey: true,
+          customRequest: true,
+          quantity: true,
+        },
       })
     : [];
+  const lines = new Map<string, CartInput[number]>();
 
-  const quantities = new Map<string, number>();
   for (const item of existingItems) {
-    quantities.set(item.productId, item.quantity);
+    lines.set(`${item.productId}\u0000${item.variantKey}`, item);
   }
   for (const item of requestedItems) {
-    quantities.set(
-      item.productId,
-      Math.min(
+    const lineId = `${item.productId}\u0000${item.variantKey}`;
+    const existing = lines.get(lineId);
+    lines.set(lineId, {
+      ...item,
+      customRequest: item.customRequest || existing?.customRequest || "",
+      quantity: Math.min(
         MAX_CART_QUANTITY,
-        (quantities.get(item.productId) ?? 0) + item.quantity,
+        (existing?.quantity ?? 0) + item.quantity,
       ),
-    );
+    });
   }
 
-  const productIds = [...quantities.keys()];
+  const candidateLines = [...lines.values()];
+  const productIds = [...new Set(candidateLines.map((item) => item.productId))];
   const products = await tx.product.findMany({
-    where: { id: { in: productIds }, status: "PUBLISHED", quantity: { gt: 0 } },
-    select: { id: true, quantity: true },
+    where: {
+      id: { in: productIds },
+      status: "PUBLISHED",
+      category: { in: [...PRODUCT_CATEGORIES] },
+    },
+    select: {
+      id: true,
+      fulfillmentMode: true,
+      variantsJson: true,
+    },
   });
   const productsById = new Map(products.map((product) => [product.id, product]));
-  const items = productIds.flatMap((productId) => {
-    const product = productsById.get(productId);
-    const requestedQuantity = quantities.get(productId);
-    if (!product || requestedQuantity === undefined) return [];
+  const items = candidateLines.flatMap((line) => {
+    const product = productsById.get(line.productId);
+    if (!product) return [];
+
+    const variants = parseStoredProductVariants(product.variantsJson);
+    const variant = getProductVariant(variants, line.variantKey);
+    if (!variant) return [];
+
+    const availableQuantity =
+      product.fulfillmentMode === "MADE_TO_ORDER" && variant.quantity === null
+        ? MAX_CART_QUANTITY
+        : (variant.quantity ?? 0);
+    if (availableQuantity < 1) return [];
+
     return [
       {
         userId,
-        productId,
-        quantity: Math.min(requestedQuantity, product.quantity),
+        productId: product.id,
+        variantKey: line.variantKey,
+        customRequest: line.customRequest,
+        quantity: Math.min(line.quantity, availableQuantity),
       },
     ];
   });
@@ -107,7 +160,12 @@ async function saveCart(
     await tx.customerCartItem.createMany({ data: items });
   }
 
-  return items.map(({ productId, quantity }) => ({ productId, quantity }));
+  return items.map(({ productId, variantKey, customRequest, quantity }) => ({
+    productId,
+    variantKey,
+    customRequest,
+    quantity,
+  }));
 }
 
 async function getUserId() {
@@ -123,7 +181,12 @@ export async function GET() {
 
   const items = await db.customerCartItem.findMany({
     where: { userId },
-    select: { productId: true, quantity: true },
+    select: {
+      productId: true,
+      variantKey: true,
+      customRequest: true,
+      quantity: true,
+    },
     orderBy: { createdAt: "asc" },
   });
 

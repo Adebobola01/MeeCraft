@@ -17,7 +17,7 @@ export default function AdminSalesPage() {
           className="text-sm font-semibold uppercase tracking-[0.28em]"
           href="/"
         >
-          Aurvella
+          MeeCraft
         </Link>
         <p className="mt-2 text-[10px] font-medium uppercase tracking-[0.22em] text-neutral-400">
           Atelier administration
@@ -42,7 +42,7 @@ export default function AdminSalesPage() {
             className="text-xs font-semibold uppercase tracking-[0.28em] lg:hidden"
             href="/"
           >
-            Aurvella
+            MeeCraft
           </Link>
           <div className="hidden text-xs text-neutral-500 lg:block">
             Admin <span className="mx-2 text-neutral-300">/</span> Sales

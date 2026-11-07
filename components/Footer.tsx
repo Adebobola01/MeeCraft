@@ -11,19 +11,20 @@ const Footer = () => {
           <Link href="/" className="shop-wordmark">
             <Logo />
           </Link>
-          <p>Jewelry to make your own.</p>
+          <p>Thoughtful shoes and bags for everyday life.</p>
         </div>
-        <nav aria-label="Shop jewelry">
-          <Link href="/products">All jewelry</Link>
-          <Link href="/gifts">Gifts</Link>
-          <Link href="/products?category=Necklaces">Necklaces</Link>
-          <Link href="/products?category=Rings">Rings</Link>
-          <Link href="/products?category=Earrings">Earrings</Link>
-          <Link href="/products?category=Bracelets">Bracelets</Link>
+        <nav aria-label="Shop MeeCraft">
+          <Link href="/products">Shop all</Link>
+          <Link href="/products?category=Shoes">Shoes</Link>
+          <Link href="/products?category=Bags">Bags</Link>
+          <Link href="/gifts">Gift guide</Link>
         </nav>
-        <nav aria-label="Follow Aurvella" className="shop-footer-socials">
+        <nav
+          aria-label="MeeCraft social links (existing Aurvella accounts, temporary)"
+          className="shop-footer-socials"
+        >
           <a
-            href="https://www.instagram.com/aurvella_jewels_?utm_source=ig_web_button_share_sheet&obrf=ZDNlZDc0MzIxNw=="
+            href="https://www.instagram.com/m.e.e.crafts?rpxt=NTlzcWtoaTYwaDlo&utm_source=qr"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -37,7 +38,7 @@ const Footer = () => {
             Instagram
           </a>
           <a
-            href="https://www.tiktok.com/@aurvella_jewelry?is_from_webapp=1&sender_device=pc"
+            href="https://www.tiktok.com/@meecrafts_ng?_r=1&_t=ZS-9B1Pp987BES"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -51,7 +52,7 @@ const Footer = () => {
             TikTok
           </a>
           <a
-            href="https://wa.me/447831478190"
+            href="https://wa.me/2348106662454"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -67,8 +68,8 @@ const Footer = () => {
         </nav>
       </div>
       <div className="shop-footer-bottom shop-content">
-        <span>© {new Date().getFullYear()} Aurvella</span>
-        <span>Made to be worn, loved, and worn again.</span>
+        <span>© {new Date().getFullYear()} MeeCraft</span>
+        <span>Social links currently point to Aurvella accounts.</span>
       </div>
     </footer>
   );

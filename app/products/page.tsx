@@ -5,12 +5,18 @@ import { StoreHeader } from "@/components/storefront/store-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getStorefrontProducts } from "@/data/storefront-products";
-import { PRODUCT_CATEGORIES, isProductCategory } from "@/lib/product-catalog";
+import {
+  PRODUCT_CATEGORIES,
+  PRODUCT_TYPES_BY_CATEGORY,
+  isProductCategory,
+  isProductType,
+} from "@/lib/product-catalog";
 import Footer from "@/components/Footer";
 
 type SearchParams = Promise<{
   q?: string | string[];
   category?: string | string[];
+  type?: string | string[];
   sort?: string | string[];
   page?: string | string[];
 }>;
@@ -19,10 +25,17 @@ function firstValue(value: string | string[] | undefined) {
   return Array.isArray(value) ? (value[0] ?? "") : (value ?? "");
 }
 
-function pageUrl(page: number, search: string, category: string, sort: string) {
+function pageUrl(
+  page: number,
+  search: string,
+  category: string,
+  productType: string,
+  sort: string,
+) {
   const params = new URLSearchParams();
   if (search) params.set("q", search);
   if (category) params.set("category", category);
+  if (productType) params.set("type", productType);
   if (sort !== "newest") params.set("sort", sort);
   if (page > 1) params.set("page", String(page));
   const query = params.toString();
@@ -37,6 +50,8 @@ export default async function ProductsPage({
   const search = rawSearch.slice(0, 100);
   const selectedCategory = firstValue(params.category);
   const category = isProductCategory(selectedCategory) ? selectedCategory : "";
+  const requestedType = firstValue(params.type);
+  const productType = isProductType(category, requestedType) ? requestedType : "";
   const requestedSort = firstValue(params.sort);
   const sort = ["price-low", "price-high"].includes(requestedSort)
     ? requestedSort
@@ -46,7 +61,13 @@ export default async function ProductsPage({
     Number.isSafeInteger(parsedPage) && parsedPage > 0
       ? Math.min(parsedPage, 100_000)
       : 1;
-  const result = await getStorefrontProducts({ search, category, sort, page });
+  const result = await getStorefrontProducts({
+    search,
+    category,
+    productType,
+    sort,
+    page,
+  });
   const currentPage = Math.min(page, result.pageCount);
   const products =
     currentPage === page
@@ -55,6 +76,7 @@ export default async function ProductsPage({
           await getStorefrontProducts({
             search,
             category,
+            productType,
             sort,
             page: currentPage,
           })
@@ -67,23 +89,23 @@ export default async function ProductsPage({
         <nav className="shop-breadcrumbs" aria-label="Breadcrumb ">
           <Link href="/">Home</Link>
           <span>/</span>
-          <span>Jewelry</span>
+          <span>Shop</span>
         </nav>
         <div className="shop-catalog-heading">
           <div>
-            <p className="shop-kicker">AURVELLA JEWELRY</p>
-            <h1>{category || "Shop all jewelry"}</h1>
+            <p className="shop-kicker">MECRAFT COLLECTION</p>
+            <h1>{productType || category || "Shoes & bags"}</h1>
           </div>
           <p>
-            Find your new everyday favorite, from the little details to the
-            statement pieces.
+            Explore shoes and bags, compare the available options, and choose
+            what suits you.
           </p>
         </div>
-        <nav className="shop-category-nav" aria-label="Jewelry categories">
+        <nav className="shop-category-nav" aria-label="Product categories">
           <Link href="/products" aria-current={!category ? "page" : undefined}>
-            All jewelry
+            All products
           </Link>
-          {PRODUCT_CATEGORIES.filter((item) => item !== "Other").map((item) => (
+          {PRODUCT_CATEGORIES.map((item) => (
             <Link
               href={`/products?category=${encodeURIComponent(item)}`}
               aria-current={category === item ? "page" : undefined}
@@ -100,9 +122,25 @@ export default async function ProductsPage({
               type="search"
               name="q"
               defaultValue={search}
-              placeholder="Search jewelry"
+              placeholder="Search shoes and bags"
               aria-label="Search products"
             />
+          </label>
+          <label className="shop-filter-select">
+            <span className="sr-only">Product style</span>
+            <select name="type" defaultValue={productType}>
+              <option value="">All styles</option>
+              {(category
+                ? PRODUCT_TYPES_BY_CATEGORY[category]
+                : PRODUCT_CATEGORIES.flatMap(
+                    (item) => PRODUCT_TYPES_BY_CATEGORY[item],
+                  )
+              ).map((item) => (
+                <option value={item} key={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
           </label>
           <label className="shop-filter-select">
             <span className="sr-only">Category</span>
@@ -129,9 +167,9 @@ export default async function ProductsPage({
         </form>
         <div className="shop-results">
           <span>
-            {result.total} {result.total === 1 ? "piece" : "pieces"} to discover
+            {result.total} {result.total === 1 ? "product" : "products"} to discover
           </span>
-          {(search || category) && (
+          {(search || category || productType) && (
             <Link href="/products" className="shop-clear-filters">
               Clear filters
             </Link>
@@ -149,18 +187,18 @@ export default async function ProductsPage({
           </div>
         ) : (
           <div className="shop-catalog-empty">
-            <span className="shop-kicker">AURVELLA COLLECTION</span>
+            <span className="shop-kicker">MECRAFT COLLECTION</span>
             <h2>
-              {search || category
-                ? "No pieces found"
-                : "New pieces are on the way"}
+              {search || category || productType
+                ? "No products found"
+                : "New products are on the way"}
             </h2>
             <p>
-              {search || category
-                ? "Try another search or remove the filters to browse the full collection."
-                : "We are adding to the collection. Check back soon to discover your next favorite."}
+              {search || category || productType
+                ? "Try another search or clear the filters to browse all shoes and bags."
+                : "The MeeCraft collection is being prepared. Check back soon to see what is available."}
             </p>
-            {(search || category) && (
+            {(search || category || productType) && (
               <Button
                 nativeButton={false}
                 render={<Link href="/products" />}
@@ -168,7 +206,7 @@ export default async function ProductsPage({
                 size="lg"
                 className="shop-filter-submit"
               >
-                <ArrowLeft aria-hidden="true" /> Shop all jewelry
+                <ArrowLeft aria-hidden="true" /> Shop all products
               </Button>
             )}
           </div>
@@ -176,7 +214,15 @@ export default async function ProductsPage({
         {result.pageCount > 1 && (
           <nav className="shop-pagination" aria-label="Product pages">
             {currentPage > 1 ? (
-              <Link href={pageUrl(currentPage - 1, search, category, sort)}>
+              <Link
+                href={pageUrl(
+                  currentPage - 1,
+                  search,
+                  category,
+                  productType,
+                  sort,
+                )}
+              >
                 <ArrowLeft aria-hidden="true" /> Previous
               </Link>
             ) : (
@@ -186,7 +232,15 @@ export default async function ProductsPage({
               {currentPage} / {result.pageCount}
             </span>
             {currentPage < result.pageCount ? (
-              <Link href={pageUrl(currentPage + 1, search, category, sort)}>
+              <Link
+                href={pageUrl(
+                  currentPage + 1,
+                  search,
+                  category,
+                  productType,
+                  sort,
+                )}
+              >
                 Next <ArrowRight aria-hidden="true" />
               </Link>
             ) : (

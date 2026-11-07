@@ -18,13 +18,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 const navLinks = [
-  { href: "/products", label: "All jewelry" },
+  { href: "/products", label: "Shop all" },
   { href: "/products?sort=newest", label: "New arrivals" },
-  { href: "/gifts", label: "Gifts" },
-  { href: "/products?category=Rings", label: "Rings" },
-  { href: "/products?category=Necklaces", label: "Necklaces" },
-  { href: "/products?category=Earrings", label: "Earrings" },
-  { href: "/products?category=Bracelets", label: "Bracelets" },
+  { href: "/products?category=Shoes", label: "Shoes" },
+  { href: "/products?category=Bags", label: "Bags" },
+  { href: "/gifts", label: "Gift guide" },
 ];
 
 export function StoreHeader() {
@@ -37,9 +35,9 @@ export function StoreHeader() {
   return (
     <header className="shop-header">
       <div className="shop-announcement">
-        <span>Jewelry for every day & everything after</span>
+        <span>Made for everyday plans and the moments in between</span>
         <Link href="/products">
-          Discover the collection <span aria-hidden="true">→</span>
+          Explore MeeCraft <span aria-hidden="true">→</span>
         </Link>
       </div>
       <div className="shop-header-main shop-content">
@@ -91,12 +89,12 @@ export function StoreHeader() {
             </SheetContent>
           </Sheet>
         </div>
-        <Link href="/" className="shop-wordmark" aria-label="Aurvella home">
+        <Link href="/" className="shop-wordmark" aria-label="MeeCraft home">
           <Logo />
         </Link>
         <div className="shop-header-actions">
           <Sheet open={searchOpen} onOpenChange={setSearchOpen}>
-            <SheetTrigger className="shop-search-link" aria-label="Search jewelry">
+            <SheetTrigger className="shop-search-link" aria-label="Search MeeCraft">
               <Search aria-hidden="true" />
               <span>Search</span>
             </SheetTrigger>
@@ -106,7 +104,7 @@ export function StoreHeader() {
                   What are you looking for?
                 </SheetTitle>
                 <SheetDescription className="sr-only">
-                  Search Aurvella jewelry by name, description, or category.
+                  Search MeeCraft shoes and bags by name, description, or category.
                 </SheetDescription>
                 <Form
                   action="/products"
@@ -119,7 +117,7 @@ export function StoreHeader() {
                       type="search"
                       name="q"
                       maxLength={100}
-                      placeholder="Try rings, necklaces, or a style"
+                      placeholder="Try sandals, totes, or a style"
                       aria-label="Search products"
                       autoFocus
                     />
@@ -136,7 +134,7 @@ export function StoreHeader() {
             </SheetContent>
           </Sheet>
           <Link href="/products" className="shop-header-browse">
-            Shop jewelry <span aria-hidden="true">→</span>
+            Shop all <span aria-hidden="true">→</span>
           </Link>
           <Link
             href="/cart"

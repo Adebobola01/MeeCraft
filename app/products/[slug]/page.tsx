@@ -6,9 +6,10 @@ import { AddToCartButton } from "@/components/storefront/add-to-cart-button";
 import { ProductImageGallery } from "@/components/storefront/product-image-gallery";
 import { getStorefrontProduct } from "@/data/storefront-products";
 import Footer from "@/components/Footer";
+import { parseStoredProductVariants } from "@/lib/product-variants";
 
 function formatPrice(priceInMinorUnits: number, currencyCode: string) {
-  return new Intl.NumberFormat("en", {
+  return new Intl.NumberFormat(currencyCode === "NGN" ? "en-NG" : "en", {
     style: "currency",
     currency: currencyCode,
     maximumFractionDigits: 2,
@@ -22,6 +23,7 @@ export default async function ProductDetailPage({
   const product = await getStorefrontProduct(slug);
 
   if (!product) notFound();
+  const variants = parseStoredProductVariants(product.variantsJson);
 
   return (
     <div className="storefront">
@@ -30,7 +32,7 @@ export default async function ProductDetailPage({
         <nav className="shop-breadcrumbs" aria-label="Breadcrumb">
           <Link href="/">Home</Link>
           <span>/</span>
-          <Link href="/products">Jewelry</Link>
+          <Link href="/products">{product.category}</Link>
           <span>/</span>
           <span>{product.name}</span>
         </nav>
@@ -41,7 +43,9 @@ export default async function ProductDetailPage({
             category={product.category}
           />
           <aside className="shop-product-info-panel">
-            <p className="shop-kicker">{product.category}</p>
+            <p className="shop-kicker">
+              {product.category} · {product.productType}
+            </p>
             <h1>{product.name}</h1>
             <p className="shop-detail-price">
               {formatPrice(product.priceInMinorUnits, product.currencyCode)}
@@ -49,33 +53,40 @@ export default async function ProductDetailPage({
             <div className="shop-detail-divider" />
             <p className="shop-detail-description">
               {product.description ||
-                "A beautiful addition to your everyday jewelry collection."}
+                "Choose the size or options that suit you. Add a custom request if you need to share a special detail."}
             </p>
             <p className="shop-detail-stock">
               <span
                 className={
+                  product.fulfillmentMode === "MADE_TO_ORDER" ||
                   product.quantity > 0
                     ? "shop-stock-dot"
                     : "shop-stock-dot is-sold"
                 }
               />
-              {product.quantity > 0 ? "In stock" : "Currently unavailable"}
+              {product.fulfillmentMode === "MADE_TO_ORDER"
+                ? `Made to order · ${product.productionLeadTimeDays} day production time`
+                : product.quantity > 0
+                  ? "Ready to ship"
+                  : "Currently unavailable"}
             </p>
             <AddToCartButton
               productId={product.id}
-              availableQuantity={product.quantity}
+              variants={variants}
+              fulfillmentMode={product.fulfillmentMode}
+              productionLeadTimeDays={product.productionLeadTimeDays}
             />
             <div className="shop-detail-notice">
               <p>Looking for something special?</p>
               <Link href="/products">
-                Explore more jewelry <ArrowUpRight aria-hidden="true" />
+                Explore more MeeCraft <ArrowUpRight aria-hidden="true" />
               </Link>
             </div>
           </aside>
         </div>
         <div className="shop-back-link">
           <Link href="/products">
-            <ArrowLeft aria-hidden="true" /> Back to all jewelry
+            <ArrowLeft aria-hidden="true" /> Back to all products
           </Link>
         </div>
       </main>

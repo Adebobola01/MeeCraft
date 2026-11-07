@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { StorefrontProduct } from "@/data/storefront-products";
 
 function formatPrice(priceInMinorUnits: number, currencyCode: string) {
-  return new Intl.NumberFormat("en", {
+  return new Intl.NumberFormat(currencyCode === "NGN" ? "en-NG" : "en", {
     style: "currency",
     currency: currencyCode,
     maximumFractionDigits: 2,
@@ -37,7 +37,13 @@ export function ProductTile({
         ) : (
           <span className="shop-product-placeholder">{product.category}</span>
         )}
-        {product.quantity === 0 && <span className="shop-product-badge">Sold out</span>}
+        {product.fulfillmentMode === "MADE_TO_ORDER" ? (
+          <span className="shop-product-badge">Made to order</span>
+        ) : (
+          product.quantity === 0 && (
+            <span className="shop-product-badge">Sold out</span>
+          )
+        )}
         <span className="shop-product-quick-view">View details</span>
       </Link>
       <div className="shop-product-info">
@@ -45,7 +51,9 @@ export function ProductTile({
           <Link href={`/products/${product.slug}`} className="shop-product-name">
             {product.name}
           </Link>
-          <p className="shop-product-category">{product.category}</p>
+          <p className="shop-product-category">
+            {product.productType || product.category}
+          </p>
         </div>
         <span className="shop-product-price">
           {formatPrice(product.priceInMinorUnits, product.currencyCode)}

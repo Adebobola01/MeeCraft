@@ -1,6 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Footprints, ShoppingBag } from "lucide-react";
 import { ProductTile } from "@/components/storefront/product-tile";
 import { FadeIn, Reveal } from "@/components/storefront/reveal";
 import { StoreHeader } from "@/components/storefront/store-header";
@@ -8,39 +7,18 @@ import {
   getBestSellerProducts,
   getFeaturedProducts,
 } from "@/data/storefront-products";
-import Logo from "@/components/Logo";
 import Footer from "@/components/Footer";
 
 const categories = [
   {
-    name: "Necklaces",
-    image: "/images/necklace.jpeg",
-    alt: "Gold pendant necklaces on a warm background",
+    name: "Shoes",
+    description: "Sandals, flats, and heels",
+    icon: Footprints,
   },
   {
-    name: "Rings",
-    image: "/images/editorial-ring.jpg",
-    alt: "A rose-gold ring with a pink gemstone",
-  },
-  {
-    name: "Earrings",
-    image: "/images/earring.jpeg",
-    alt: "Statement gemstone earrings against a green leaf",
-  },
-  {
-    name: "Bracelets",
-    image: "/images/category-bracelets.jpg",
-    alt: "A delicate gold bracelet on a soft pink background",
-  },
-  {
-    name: "wristwatches",
-    image: "/images/wristwatch.jpeg",
-    alt: "A delicate gold bracelet on a soft pink background",
-  },
-  {
-    name: "Brooches",
-    image: "/images/brooch.jpeg",
-    alt: "A delicate gold bracelet on a soft pink background",
+    name: "Bags",
+    description: "Totes, crossbody bags, and clutches",
+    icon: ShoppingBag,
   },
 ];
 
@@ -55,70 +33,72 @@ export default async function Home() {
       <StoreHeader />
       <main>
         <section className="shop-hero">
-          <Image
-            src="/images/hero.jpeg"
-            alt="Layered necklaces worn with a white blouse"
-            fill
-            priority
-            sizes="100vw"
-            className="shop-hero-image"
-          />
+          <div className="shop-hero-art" aria-hidden="true">
+            <div className="shop-hero-art-item shop-hero-art-shoe">
+              <Footprints />
+              <span>Shoes</span>
+            </div>
+            <div className="shop-hero-art-item shop-hero-art-bag">
+              <ShoppingBag />
+              <span>Bags</span>
+            </div>
+            <span className="shop-hero-art-note">MeeCraft collection</span>
+          </div>
           <div className="shop-hero-shade" />
           <FadeIn className="shop-hero-copy">
-            <p className="shop-kicker">
-              JEWELRY FOR EVERY DAY & EVERYTHING AFTER
-            </p>
+            <p className="shop-kicker">MEET MECRAFT</p>
             <h1>
-              Find the piece
+              Made for
               <br />
-              that feels like <em>you.</em>
+              the way you <em>move.</em>
             </h1>
             <p>
-              The finishing touch, the first thing you put on, the piece that
-              never leaves your side.
+              Find shoes and bags for your everyday plans, with options to make
+              each choice feel like yours.
             </p>
             <Link href="/products" className="shop-button shop-button-light">
-              Shop all jewelry <ArrowRight aria-hidden="true" />
+              Explore the collection <ArrowRight aria-hidden="true" />
             </Link>
           </FadeIn>
-          <span className="shop-hero-caption">THE AURVELLA COLLECTION</span>
+          <span className="shop-hero-caption">
+            PRODUCT PHOTOGRAPHY COMING SOON
+          </span>
         </section>
 
         <section className="shop-category-section shop-content">
           <div className="shop-section-heading">
             <div>
-              <p className="shop-kicker">FIND YOUR FAVORITE</p>
+              <p className="shop-kicker">FIND YOUR NEXT FAVORITE</p>
               <h2>Shop by category</h2>
             </div>
             <Link className="shop-text-link" href="/products">
-              View all jewelry <ArrowUpRight aria-hidden="true" />
+              View all products <ArrowUpRight aria-hidden="true" />
             </Link>
           </div>
-          <div className="shop-category-scrollable">
-            {categories.map((category, index) => (
-              <Reveal key={category.name} delay={index * 0.04}>
-                <Link
-                  className="shop-category-card"
-                  href={`/products?category=${encodeURIComponent(category.name)}`}
-                >
-                  <span className="shop-category-image">
-                    <Image
-                      src={category.image}
-                      alt={category.alt}
-                      fill
-                      sizes="(max-width: 680px) 50vw, (max-width: 1000px) 33vw, 360px"
-                    />
-                    <span className="shop-category-arrow">
-                      <ArrowUpRight aria-hidden="true" />
+          <div className="shop-category-scrollable shop-category-scrollable-two">
+            {categories.map((category, index) => {
+              const Icon = category.icon;
+              return (
+                <Reveal key={category.name} delay={index * 0.04}>
+                  <Link
+                    className="shop-category-card"
+                    href={`/products?category=${encodeURIComponent(category.name)}`}
+                  >
+                    <span className="shop-category-image shop-placeholder-art">
+                      <Icon aria-hidden="true" />
+                      <span>Product photos coming soon</span>
+                      <span className="shop-category-arrow">
+                        <ArrowUpRight aria-hidden="true" />
+                      </span>
                     </span>
-                  </span>
-                  <span className="shop-category-name">{category.name}</span>
-                  <span className="shop-category-subtitle">
-                    Shop {category.name.toLowerCase()}
-                  </span>
-                </Link>
-              </Reveal>
-            ))}
+                    <span className="shop-category-name">{category.name}</span>
+                    <span className="shop-category-subtitle">
+                      {category.description}
+                    </span>
+                  </Link>
+                </Reveal>
+              );
+            })}
           </div>
         </section>
 
@@ -126,11 +106,11 @@ export default async function Home() {
           <div className="shop-content">
             <div className="shop-section-heading">
               <div>
-                <p className="shop-kicker">THE LATEST FINDS</p>
+                <p className="shop-kicker">FRESH FROM MECRAFT</p>
                 <h2>Just added</h2>
               </div>
               <Link className="shop-text-link" href="/products?sort=newest">
-                Shop the collection <ArrowUpRight aria-hidden="true" />
+                Shop new arrivals <ArrowUpRight aria-hidden="true" />
               </Link>
             </div>
             {featured.length ? (
@@ -144,16 +124,17 @@ export default async function Home() {
             ) : (
               <div className="shop-empty-products">
                 <span className="shop-empty-mark" aria-hidden="true">
-                  A
+                  M
                 </span>
                 <div>
-                  <h3>New favorites are on the way.</h3>
+                  <h3>The first MeeCraft pieces are on their way.</h3>
                   <p>
-                    In the meantime, find your next favorite in the collection.
+                    Check back soon, or browse shoes and bags to see what is
+                    coming.
                   </p>
                 </div>
                 <Link href="/products" className="shop-button shop-button-dark">
-                  Browse jewelry <ArrowRight aria-hidden="true" />
+                  Browse products <ArrowRight aria-hidden="true" />
                 </Link>
               </div>
             )}
@@ -164,11 +145,11 @@ export default async function Home() {
           <div className="shop-content">
             <div className="shop-section-heading">
               <div>
-                <p className="shop-kicker">THE AURVELLA EDIT</p>
-                <h2>Best Sellers</h2>
+                <p className="shop-kicker">THE MECRAFT EDIT</p>
+                <h2>Popular picks</h2>
               </div>
               <Link className="shop-text-link" href="/products">
-                Shop all jewelry <ArrowUpRight aria-hidden="true" />
+                Shop all products <ArrowUpRight aria-hidden="true" />
               </Link>
             </div>
             {bestSellers.length ? (
@@ -182,16 +163,17 @@ export default async function Home() {
             ) : (
               <div className="shop-empty-products">
                 <span className="shop-empty-mark" aria-hidden="true">
-                  A
+                  M
                 </span>
                 <div>
-                  <h3>Our best-loved pieces are coming soon.</h3>
+                  <h3>Popular picks will appear here.</h3>
                   <p>
-                    Explore the collection while we put together this edit.
+                    In the meantime, explore the upcoming shoes and bags
+                    collection.
                   </p>
                 </div>
                 <Link href="/products" className="shop-button shop-button-dark">
-                  Browse jewelry <ArrowRight aria-hidden="true" />
+                  Browse products <ArrowRight aria-hidden="true" />
                 </Link>
               </div>
             )}
@@ -199,26 +181,24 @@ export default async function Home() {
         </section>
 
         <section className="shop-story shop-content">
-          <div className="shop-story-image">
-            <Image
-              src="/images/editorial-still-life.jpg"
-              alt="Gold hoop earrings catching the afternoon light"
-              fill
-              sizes="(max-width: 760px) 100vw, 50vw"
-            />
+          <div className="shop-story-image shop-story-placeholder">
+            <Footprints aria-hidden="true" />
+            <ShoppingBag aria-hidden="true" />
+            <span>More about MeeCraft</span>
           </div>
           <div className="shop-story-copy">
-            <p className="shop-kicker">THE AURVELLA EDIT</p>
+            <p className="shop-kicker">A NEW WAY TO SHOP</p>
             <h2>
-              A little detail.
-              <br />A whole new feeling.
+              Your style,
+              <br />
+              your everyday.
             </h2>
             <p>
-              Start with a favorite shape, then make it part of your everyday.
-              There&apos;s always a reason to wear the good pieces.
+              Browse shoes and bags, compare the available options, and choose
+              the details that work for you.
             </p>
             <Link href="/products" className="shop-text-link">
-              Find your piece <ArrowRight aria-hidden="true" />
+              Find your fit <ArrowRight aria-hidden="true" />
             </Link>
           </div>
         </section>

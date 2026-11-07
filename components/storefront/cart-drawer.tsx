@@ -13,12 +13,22 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useCart, type CartLine } from "@/components/storefront/cart-provider";
+import {
+  getAvailableVariantQuantity,
+  getProductVariant,
+  getProductVariantLabel,
+  parseStoredProductVariants,
+} from "@/lib/product-variants";
 
 type CartProduct = {
   id: string;
   slug: string;
   name: string;
   category: string;
+  productType: string;
+  fulfillmentMode: string;
+  productionLeadTimeDays: number | null;
+  variantsJson: string;
   priceInMinorUnits: number;
   currencyCode: string;
   quantity: number;
@@ -36,6 +46,15 @@ function isCartProduct(value: unknown): value is CartProduct {
     typeof value.name !== "string" ||
     !("category" in value) ||
     typeof value.category !== "string" ||
+    !("productType" in value) ||
+    typeof value.productType !== "string" ||
+    !("fulfillmentMode" in value) ||
+    typeof value.fulfillmentMode !== "string" ||
+    !("productionLeadTimeDays" in value) ||
+    (value.productionLeadTimeDays !== null &&
+      typeof value.productionLeadTimeDays !== "number") ||
+    !("variantsJson" in value) ||
+    typeof value.variantsJson !== "string" ||
     !("priceInMinorUnits" in value) ||
     typeof value.priceInMinorUnits !== "number" ||
     !("currencyCode" in value) ||
@@ -60,7 +79,7 @@ function isCartProduct(value: unknown): value is CartProduct {
 }
 
 function formatPrice(priceInMinorUnits: number, currencyCode: string) {
-  return new Intl.NumberFormat("en", {
+  return new Intl.NumberFormat(currencyCode === "NGN" ? "en-NG" : "en", {
     style: "currency",
     currency: currencyCode,
     maximumFractionDigits: 2,
@@ -73,6 +92,8 @@ function linesChanged(current: CartLine[], next: CartLine[]) {
     current.some(
       (line, index) =>
         line.productId !== next[index]?.productId ||
+        line.variantKey !== next[index]?.variantKey ||
+        line.customRequest !== next[index]?.customRequest ||
         line.quantity !== next[index]?.quantity,
     )
   );
@@ -135,13 +156,23 @@ export function CartDrawer() {
         let updatedForStock = false;
         const nextItems = items.flatMap((item) => {
           const product = productsById.get(item.productId);
-          if (!product || product.quantity < 1) {
+          if (!product) {
             updatedForStock = true;
             return [];
           }
-          if (item.quantity > product.quantity) {
+          const variants = parseStoredProductVariants(product.variantsJson);
+          const variant = getProductVariant(variants, item.variantKey);
+          const availableQuantity = getAvailableVariantQuantity(
+            variant,
+            product.fulfillmentMode,
+          );
+          if (availableQuantity < 1) {
             updatedForStock = true;
-            return [{ ...item, quantity: product.quantity }];
+            return [];
+          }
+          if (item.quantity > availableQuantity) {
+            updatedForStock = true;
+            return [{ ...item, quantity: availableQuantity }];
           }
           return [item];
         });
@@ -239,11 +270,20 @@ export function CartDrawer() {
             </div>
           ) : (
             <>
-              {visibleItems.map(({ product, quantity }) => {
+              {visibleItems.map(({ product, variantKey, customRequest, quantity }) => {
                 const image = product.images[0];
+                const variants = parseStoredProductVariants(product.variantsJson);
+                const variant = getProductVariant(variants, variantKey);
+                const availableQuantity = getAvailableVariantQuantity(
+                  variant,
+                  product.fulfillmentMode,
+                );
 
                 return (
-                  <article className="shop-cart-drawer-item" key={product.id}>
+                  <article
+                    className="shop-cart-drawer-item"
+                    key={`${product.id}-${variantKey}`}
+                  >
                     <Link
                       href={`/products/${product.slug}`}
                       className="shop-cart-drawer-image"
@@ -275,16 +315,34 @@ export function CartDrawer() {
                           product.currencyCode,
                         )}
                       </span>
+                      {variant && (
+                        <span className="shop-cart-option">
+                          {getProductVariantLabel(variant)}
+                        </span>
+                      )}
+                      {customRequest && (
+                        <span className="shop-cart-option">
+                          Request: {customRequest}
+                        </span>
+                      )}
+                      {product.fulfillmentMode === "MADE_TO_ORDER" && (
+                        <span className="shop-cart-option">
+                          Made to order
+                          {product.productionLeadTimeDays
+                            ? ` · ${product.productionLeadTimeDays} days`
+                            : ""}
+                        </span>
+                      )}
                       <div
                         className="shop-cart-quantity"
-                        aria-label={`Quantity for ${product.name}, ${product.quantity} in stock`}
+                        aria-label={`Quantity for ${product.name}, ${availableQuantity} available`}
                       >
                         <button
                           type="button"
                           aria-label={`Decrease ${product.name} quantity`}
                           disabled={quantity <= 1 || accountSyncing}
                           onClick={() =>
-                            setQuantity(product.id, quantity - 1)
+                            setQuantity(product.id, variantKey, quantity - 1)
                           }
                         >
                           <Minus aria-hidden="true" />
@@ -294,10 +352,10 @@ export function CartDrawer() {
                           type="button"
                           aria-label={`Increase ${product.name} quantity`}
                           disabled={
-                            quantity >= product.quantity || accountSyncing
+                            quantity >= availableQuantity || accountSyncing
                           }
                           onClick={() =>
-                            setQuantity(product.id, quantity + 1)
+                            setQuantity(product.id, variantKey, quantity + 1)
                           }
                         >
                           <Plus aria-hidden="true" />
@@ -309,7 +367,7 @@ export function CartDrawer() {
                       className="shop-cart-drawer-remove"
                       aria-label={`Remove ${product.name} from bag`}
                       disabled={accountSyncing}
-                      onClick={() => removeItem(product.id)}
+                      onClick={() => removeItem(product.id, variantKey)}
                     >
                       <Trash2 aria-hidden="true" />
                     </button>

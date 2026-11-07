@@ -38,7 +38,7 @@ export default async function SignInPage({
         <Link href="/" className="shop-auth-wordmark">
           <Logo />
         </Link>
-        <p className="shop-kicker">YOUR AURVELLA ACCOUNT</p>
+        <p className="shop-kicker">YOUR MECRAFT ACCOUNT</p>
         <h1>Welcome to your little corner.</h1>
         <p className="shop-auth-intro">
           Sign in or create an account to keep your favorites close.
@@ -50,7 +50,7 @@ export default async function SignInPage({
         )}
         <AuthForm callbackURL={callbackURL} googleEnabled={googleEnabled} />
         <Link className="shop-auth-back" href="/">
-          Back to Aurvella
+          Back to MeeCraft
         </Link>
       </section>
     </main>

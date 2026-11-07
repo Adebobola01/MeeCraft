@@ -23,10 +23,13 @@ function firstValue(value: string | string[] | undefined) {
 }
 
 function formatPrice(priceInMinorUnits: number, currencyCode: string) {
-  const formatter = new Intl.NumberFormat("en", {
+  const formatter = new Intl.NumberFormat(
+    currencyCode === "NGN" ? "en-NG" : "en",
+    {
     style: "currency",
     currency: currencyCode,
-  });
+    },
+  );
   const fractionDigits =
     formatter.resolvedOptions().maximumFractionDigits ?? 2;
 
@@ -158,7 +161,7 @@ export default async function AdminDashboardPage({
           className="text-sm font-semibold uppercase tracking-[0.28em]"
           href="/"
         >
-          Aurvella
+          MeeCraft
         </Link>
         <p className="mt-2 text-[10px] font-medium uppercase tracking-[0.22em] text-neutral-400">
           Atelier administration
@@ -185,7 +188,7 @@ export default async function AdminDashboardPage({
             className="text-xs font-semibold uppercase tracking-[0.28em] lg:hidden"
             href="/"
           >
-            Aurvella
+            MeeCraft
           </Link>
           <div className="hidden text-xs text-neutral-500 lg:block">
             Admin <span className="mx-2 text-neutral-300">/</span> Overview
@@ -199,7 +202,7 @@ export default async function AdminDashboardPage({
             </button>
           </form>
           <p className="hidden text-xs text-neutral-500 sm:block">
-            Jewelry catalog
+            Shoes and bags catalog
           </p>
         </header>
         <AdminNavigation active="overview" mobile />
@@ -305,7 +308,7 @@ export default async function AdminDashboardPage({
               <div>
                 <h2 className="text-lg font-medium">Products</h2>
                 <p className="mt-1 text-sm text-neutral-500">
-                  Browse and review your jewelry listings.
+                  Browse and review your shoe and bag listings.
                 </p>
               </div>
               <form
@@ -414,7 +417,7 @@ export default async function AdminDashboardPage({
                             </div>
                           </td>
                           <td className="px-4 py-3.5 text-sm text-neutral-600">
-                            {product.category}
+                            {product.category} · {product.productType}
                           </td>
                           <td className="px-4 py-3.5 text-sm font-medium">
                             {formatPrice(
@@ -423,7 +426,9 @@ export default async function AdminDashboardPage({
                             )}
                           </td>
                           <td className="px-4 py-3.5 text-sm text-neutral-600">
-                            {product.quantity}
+                            {product.fulfillmentMode === "MADE_TO_ORDER"
+                              ? "Made to order"
+                              : product.quantity}
                           </td>
                           <td className="px-4 py-3.5">
                             <StatusBadge status={product.status} />

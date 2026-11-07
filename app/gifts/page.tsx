@@ -1,33 +1,18 @@
-import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Footprints, ShoppingBag } from "lucide-react";
 import { StoreHeader } from "@/components/storefront/store-header";
 import Footer from "@/components/Footer";
 
 const giftCategories = [
   {
-    name: "Necklaces",
-    description: "A keepsake to wear close.",
-    image: "/images/necklace.jpeg",
-    alt: "Gold pendant necklace",
+    name: "Shoes",
+    description: "A thoughtful pick for their everyday.",
+    icon: Footprints,
   },
   {
-    name: "Earrings",
-    description: "A thoughtful finishing touch.",
-    image: "/images/earring.jpeg",
-    alt: "Gemstone earrings",
-  },
-  {
-    name: "Bracelets",
-    description: "An everyday reminder.",
-    image: "/images/category-bracelets.jpg",
-    alt: "Delicate gold bracelet",
-  },
-  {
-    name: "Rings",
-    description: "A little detail with meaning.",
-    image: "/images/editorial-ring.jpg",
-    alt: "Rose-gold ring with a pink gemstone",
+    name: "Bags",
+    description: "A useful favorite in a style they will love.",
+    icon: ShoppingBag,
   },
 ];
 
@@ -39,50 +24,49 @@ export default function GiftsPage() {
         <nav className="shop-breadcrumbs" aria-label="Breadcrumb">
           <Link href="/">Home</Link>
           <span>/</span>
-          <span>Gifts</span>
+          <span>Gift guide</span>
         </nav>
         <section className="shop-gifts-intro">
-          <p className="shop-kicker">THE AURVELLA GIFT GUIDE</p>
-          <h1>Give them a piece to keep.</h1>
+          <p className="shop-kicker">THE MECRAFT GIFT GUIDE</p>
+          <h1>Find something that feels like them.</h1>
           <p>
-            Find a thoughtful little something for the people and moments that
-            matter.
+            Explore shoes and bags for birthdays, celebrations, and the
+            everyday moments worth marking.
           </p>
           <Link href="/products" className="shop-button shop-button-dark">
-            Shop all jewelry <ArrowRight aria-hidden="true" />
+            Browse all products <ArrowRight aria-hidden="true" />
           </Link>
         </section>
         <section className="shop-gift-categories" aria-labelledby="gift-picks">
           <div className="shop-section-heading">
             <div>
-              <p className="shop-kicker">A THOUGHTFUL PLACE TO START</p>
-              <h2 id="gift-picks">Find their kind of lovely</h2>
+              <p className="shop-kicker">A PLACE TO START</p>
+              <h2 id="gift-picks">Explore the collections</h2>
             </div>
           </div>
-          <div className="shop-category-grid">
-            {giftCategories.map((category) => (
-              <Link
-                className="shop-category-card"
-                href={`/products?category=${encodeURIComponent(category.name)}`}
-                key={category.name}
-              >
-                <span className="shop-category-image">
-                  <Image
-                    src={category.image}
-                    alt={category.alt}
-                    fill
-                    sizes="(max-width: 1000px) 50vw, 25vw"
-                  />
-                  <span className="shop-category-arrow">
-                    <ArrowUpRight aria-hidden="true" />
+          <div className="shop-category-grid shop-gift-category-grid">
+            {giftCategories.map((category) => {
+              const Icon = category.icon;
+              return (
+                <Link
+                  className="shop-category-card"
+                  href={`/products?category=${encodeURIComponent(category.name)}`}
+                  key={category.name}
+                >
+                  <span className="shop-category-image shop-placeholder-art">
+                    <Icon aria-hidden="true" />
+                    <span>Product photos coming soon</span>
+                    <span className="shop-category-arrow">
+                      <ArrowUpRight aria-hidden="true" />
+                    </span>
                   </span>
-                </span>
-                <span className="shop-category-name">{category.name}</span>
-                <span className="shop-category-subtitle">
-                  {category.description}
-                </span>
-              </Link>
-            ))}
+                  <span className="shop-category-name">{category.name}</span>
+                  <span className="shop-category-subtitle">
+                    {category.description}
+                  </span>
+                </Link>
+              );
+            })}
           </div>
         </section>
       </main>

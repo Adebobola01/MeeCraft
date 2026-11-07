@@ -9,9 +9,14 @@ import {
 } from "@/lib/r2-storage";
 import { db } from "@/lib/db";
 import {
+  isFulfillmentMode,
   isProductCategory,
+  isProductType,
   PRODUCT_CATEGORIES,
 } from "@/lib/product-catalog";
+import {
+  parseProductVariants,
+} from "@/lib/product-variants";
 
 const PRODUCT_STATUSES = ["DRAFT", "PUBLISHED", "SOLD_OUT"] as const;
 
@@ -53,18 +58,24 @@ function isImageTicket(value: unknown): value is ProductImageUploadTicket {
 export async function createAdminProduct({
   name,
   category,
+  productType,
   description,
+  fulfillmentMode,
+  productionLeadTimeDays,
+  variantsInput,
   priceInMinorUnits,
-  quantity,
   currencyCode,
   status,
   imageTickets,
 }: {
   name: string;
   category: string;
+  productType: string;
   description: string;
+  fulfillmentMode: string;
+  productionLeadTimeDays: number | null;
+  variantsInput: string;
   priceInMinorUnits: number;
-  quantity: number;
   currencyCode: string;
   status: string;
   imageTickets: unknown;
@@ -86,15 +97,34 @@ export async function createAdminProduct({
   if (
     !name.trim() ||
     !isProductCategory(category) ||
+    !isProductType(category, productType) ||
+    !isFulfillmentMode(fulfillmentMode) ||
     !Number.isSafeInteger(priceInMinorUnits) ||
     priceInMinorUnits <= 0 ||
-    !Number.isSafeInteger(quantity) ||
-    quantity < 0 ||
-    quantity > 1_000_000 ||
-    !["USD", "GBP", "EUR"].includes(currencyCode) ||
+    !["NGN", "USD", "GBP", "EUR"].includes(currencyCode) ||
     !["DRAFT", "PUBLISHED"].includes(status)
   ) {
     throw new Error("PRODUCT_FORM:Some product details are invalid.");
+  }
+
+  if (
+    (fulfillmentMode === "MADE_TO_ORDER" &&
+      (!Number.isSafeInteger(productionLeadTimeDays) ||
+        productionLeadTimeDays === null ||
+        productionLeadTimeDays < 1 ||
+        productionLeadTimeDays > 365)) ||
+    (fulfillmentMode === "READY_TO_SHIP" && productionLeadTimeDays !== null)
+  ) {
+    throw new Error(
+      "PRODUCT_FORM:Set a production lead time between 1 and 365 days for made-to-order products.",
+    );
+  }
+
+  const parsedVariants = parseProductVariants(variantsInput, fulfillmentMode);
+  if (status === "PUBLISHED" && parsedVariants.variants.length === 0) {
+    throw new Error(
+      "PRODUCT_FORM:Add at least one size or option before publishing.",
+    );
   }
 
   if (status === "PUBLISHED" && imageTickets.length === 0) {
@@ -124,7 +154,7 @@ export async function createAdminProduct({
     throw error;
   }
 
-  const baseSlug = slugify(name) || "jewelry";
+  const baseSlug = slugify(name) || "meecraft-item";
   let slug = baseSlug;
 
   if (await db.product.findUnique({ where: { slug }, select: { id: true } })) {
@@ -136,9 +166,13 @@ export async function createAdminProduct({
       slug,
       name: name.trim(),
       category: category.trim(),
+      productType,
       description: description.trim(),
+      fulfillmentMode,
+      productionLeadTimeDays,
+      variantsJson: JSON.stringify(parsedVariants.variants),
       priceInMinorUnits,
-      quantity,
+      quantity: parsedVariants.quantity,
       currencyCode,
       status,
       images: { create: images },
@@ -160,6 +194,10 @@ export async function getAdminProductForEdit(id: string) {
       name: true,
       description: true,
       category: true,
+      productType: true,
+      fulfillmentMode: true,
+      productionLeadTimeDays: true,
+      variantsJson: true,
       priceInMinorUnits: true,
       quantity: true,
       currencyCode: true,
@@ -176,18 +214,24 @@ export async function updateAdminProduct({
   id,
   name,
   category,
+  productType,
   description,
+  fulfillmentMode,
+  productionLeadTimeDays,
+  variantsInput,
   priceInMinorUnits,
-  quantity,
   currencyCode,
   status,
 }: {
   id: string;
   name: string;
   category: string;
+  productType: string;
   description: string;
+  fulfillmentMode: string;
+  productionLeadTimeDays: number | null;
+  variantsInput: string;
   priceInMinorUnits: number;
-  quantity: number;
   currencyCode: string;
   status: string;
 }) {
@@ -200,16 +244,35 @@ export async function updateAdminProduct({
     name.trim().length < 2 ||
     name.trim().length > 100 ||
     !isProductCategory(category) ||
+    !isProductType(category, productType) ||
+    !isFulfillmentMode(fulfillmentMode) ||
     description.trim().length > 3000 ||
     !Number.isSafeInteger(priceInMinorUnits) ||
     priceInMinorUnits <= 0 ||
-    !Number.isSafeInteger(quantity) ||
-    quantity < 0 ||
-    quantity > 1_000_000 ||
-    !["USD", "GBP", "EUR"].includes(currencyCode) ||
+    !["NGN", "USD", "GBP", "EUR"].includes(currencyCode) ||
     !["DRAFT", "PUBLISHED", "SOLD_OUT"].includes(status)
   ) {
     throw new Error("PRODUCT_FORM:Some product details are invalid.");
+  }
+
+  if (
+    (fulfillmentMode === "MADE_TO_ORDER" &&
+      (!Number.isSafeInteger(productionLeadTimeDays) ||
+        productionLeadTimeDays === null ||
+        productionLeadTimeDays < 1 ||
+        productionLeadTimeDays > 365)) ||
+    (fulfillmentMode === "READY_TO_SHIP" && productionLeadTimeDays !== null)
+  ) {
+    throw new Error(
+      "PRODUCT_FORM:Set a production lead time between 1 and 365 days for made-to-order products.",
+    );
+  }
+
+  const parsedVariants = parseProductVariants(variantsInput, fulfillmentMode);
+  if (status === "PUBLISHED" && parsedVariants.variants.length === 0) {
+    throw new Error(
+      "PRODUCT_FORM:Add at least one size or option before publishing.",
+    );
   }
 
   const product = await db.product.findUnique({
@@ -227,7 +290,7 @@ export async function updateAdminProduct({
     );
   }
 
-  const baseSlug = slugify(name) || "jewelry";
+  const baseSlug = slugify(name) || "meecraft-item";
   const matchingSlug = await db.product.findFirst({
     where: { slug: baseSlug, NOT: { id } },
     select: { id: true },
@@ -242,9 +305,13 @@ export async function updateAdminProduct({
       slug,
       name: name.trim(),
       category,
+      productType,
       description: description.trim(),
+      fulfillmentMode,
+      productionLeadTimeDays,
+      variantsJson: JSON.stringify(parsedVariants.variants),
       priceInMinorUnits,
-      quantity,
+      quantity: parsedVariants.quantity,
       currencyCode,
       status,
     },
@@ -278,6 +345,7 @@ export async function getAdminProductDashboard({
       OR: [
         { name: { contains: search } },
         { category: { contains: search } },
+        { productType: { contains: search } },
         { slug: { contains: search } },
       ],
     });
@@ -307,6 +375,8 @@ export async function getAdminProductDashboard({
       slug: true,
       name: true,
       category: true,
+      productType: true,
+      fulfillmentMode: true,
       priceInMinorUnits: true,
       currencyCode: true,
       quantity: true,
