@@ -1,7 +1,6 @@
 import Logo from "@/components/Logo";
 import Link from "next/link";
 import Image from "next/image";
-import React from "react";
 
 const Footer = () => {
   return (
@@ -69,7 +68,6 @@ const Footer = () => {
       </div>
       <div className="shop-footer-bottom shop-content">
         <span>© {new Date().getFullYear()} MeeCraft</span>
-        <span>Social links currently point to Aurvella accounts.</span>
       </div>
     </footer>
   );

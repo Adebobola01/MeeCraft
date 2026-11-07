@@ -5,7 +5,7 @@ const Logo = () => {
   return (
     <Image
       src="/images/logo.png"
-      alt="Temporary Aurvella logo"
+      alt="MeeCraft logo"
       width={100}
       height={100}
     />
