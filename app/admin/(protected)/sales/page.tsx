@@ -17,7 +17,7 @@ export default function AdminSalesPage() {
           className="text-sm font-semibold uppercase tracking-[0.28em]"
           href="/"
         >
-          MeeCraft
+          MeeCrafts
         </Link>
         <p className="mt-2 text-[10px] font-medium uppercase tracking-[0.22em] text-neutral-400">
           Atelier administration
@@ -42,7 +42,7 @@ export default function AdminSalesPage() {
             className="text-xs font-semibold uppercase tracking-[0.28em] lg:hidden"
             href="/"
           >
-            MeeCraft
+            MeeCrafts
           </Link>
           <div className="hidden text-xs text-neutral-500 lg:block">
             Admin <span className="mx-2 text-neutral-300">/</span> Sales
@@ -87,11 +87,13 @@ export default function AdminSalesPage() {
             aria-label="Sales reporting status"
             className="mt-8 border border-neutral-200 bg-white p-5 sm:p-6"
           >
-            <p className="text-sm font-medium">Sales reporting is not available yet</p>
+            <p className="text-sm font-medium">
+              Sales reporting is not available yet
+            </p>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-neutral-600">
-              Checkout is not connected, so the store does not yet record
-              orders or payments. These metrics will populate once sales are
-              captured; no estimates are shown.
+              Checkout is not connected, so the store does not yet record orders
+              or payments. These metrics will populate once sales are captured;
+              no estimates are shown.
             </p>
           </section>
 

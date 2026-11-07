@@ -26,12 +26,11 @@ function formatPrice(priceInMinorUnits: number, currencyCode: string) {
   const formatter = new Intl.NumberFormat(
     currencyCode === "NGN" ? "en-NG" : "en",
     {
-    style: "currency",
-    currency: currencyCode,
+      style: "currency",
+      currency: currencyCode,
     },
   );
-  const fractionDigits =
-    formatter.resolvedOptions().maximumFractionDigits ?? 2;
+  const fractionDigits = formatter.resolvedOptions().maximumFractionDigits ?? 2;
 
   return formatter.format(priceInMinorUnits / 10 ** fractionDigits);
 }
@@ -99,10 +98,7 @@ function ProductThumbnail({
         stroke="currentColor"
         strokeWidth="1.5"
       >
-        <path
-          d="M6 8.5 12 4l6 4.5v8L12 21l-6-4.5v-8Z"
-          strokeLinejoin="round"
-        />
+        <path d="M6 8.5 12 4l6 4.5v8L12 21l-6-4.5v-8Z" strokeLinejoin="round" />
         <path d="m6.5 8.75 5.5 4 5.5-4M12 13v7.5" strokeLinejoin="round" />
       </svg>
     </div>
@@ -134,9 +130,7 @@ export default async function AdminDashboardPage({
   const rawCategory = firstValue(params.category) ?? "";
   const category = rawCategory.trim().slice(0, 80);
   const requestedPage = Number.parseInt(firstValue(params.page) ?? "1", 10);
-  const page = Number.isFinite(requestedPage)
-    ? Math.max(1, requestedPage)
-    : 1;
+  const page = Number.isFinite(requestedPage) ? Math.max(1, requestedPage) : 1;
 
   const dashboard = await getAdminProductDashboard({
     status,
@@ -146,9 +140,7 @@ export default async function AdminDashboardPage({
     pageSize: PAGE_SIZE,
   });
   const { currentPage, pageCount } = dashboard;
-  const start = dashboard.matchingCount
-    ? (currentPage - 1) * PAGE_SIZE + 1
-    : 0;
+  const start = dashboard.matchingCount ? (currentPage - 1) * PAGE_SIZE + 1 : 0;
   const end = Math.min(currentPage * PAGE_SIZE, dashboard.matchingCount);
   const hasFilters = Boolean(search || status || category);
   const productCreated = firstValue(params.created) === "1";
@@ -161,7 +153,7 @@ export default async function AdminDashboardPage({
           className="text-sm font-semibold uppercase tracking-[0.28em]"
           href="/"
         >
-          MeeCraft
+          MeeCrafts
         </Link>
         <p className="mt-2 text-[10px] font-medium uppercase tracking-[0.22em] text-neutral-400">
           Atelier administration
@@ -188,7 +180,7 @@ export default async function AdminDashboardPage({
             className="text-xs font-semibold uppercase tracking-[0.28em] lg:hidden"
             href="/"
           >
-            MeeCraft
+            MeeCrafts
           </Link>
           <div className="hidden text-xs text-neutral-500 lg:block">
             Admin <span className="mx-2 text-neutral-300">/</span> Overview
@@ -443,10 +435,7 @@ export default async function AdminDashboardPage({
                                 href={`/admin/products/${product.id}/edit`}
                               >
                                 Edit
-                                <span className="sr-only">
-                                  {" "}
-                                  {product.name}
-                                </span>
+                                <span className="sr-only"> {product.name}</span>
                               </Link>
                             </div>
                           </td>
